@@ -1,162 +1,167 @@
 ---
-title: Half-Sync/Half-Async
+title: "Half-Sync/Half-Async Pattern in Java: Enhancing System Performance with Dual Processing"
+shortTitle: Half-Sync/Half-Async
+description: "Learn how the Half-Sync/Half-Async design pattern in Java improves concurrency and system efficiency by decoupling asynchronous and synchronous processing. Explore real-world examples, programmatic implementations, and key use cases."
 category: Concurrency
 language: en
 tag:
- - Performance
+  - Asynchronous
+  - Decoupling
+  - Synchronization
+  - Thread management
 ---
 
-## Intent
-The Half-Sync/Half-Async pattern decouples synchronous I/O from
-asynchronous I/O in a system to simplify concurrent programming effort without
-degrading execution efficiency.
+## Also known as
 
-## Class diagram
-![Half-Sync/Half-Async class diagram](./etc/half-sync-half-async.png)
+* Async-Sync Bridge
+* Half-Synchronous/Half-Asynchronous
 
-## Applicability
-Use Half-Sync/Half-Async pattern when
+## Intent of Half-Sync/Half-Async Design Pattern
 
-* a system possesses following characteristics:
-  * the system must perform tasks in response to external events that occur asynchronously, like hardware interrupts in OS
-  * it is inefficient to dedicate separate thread of control to perform synchronous I/O for each external source of event
-  * the higher level tasks in the system can be simplified significantly if I/O is performed synchronously.
-* one or more tasks in a system must run in a single thread of control, while other tasks may benefit from multi-threading.
+The Half-Sync/Half-Async pattern in Java aims to decouple asynchronous and synchronous processing in concurrent systems, enhancing efficiency and performance. This pattern is particularly useful for managing complex concurrent operations in software systems.
 
-## Explanation
-The Half-Sync/Half-Async pattern is a concurrency design pattern used in software engineering to manage concurrent operations and interactions in a system. It's particularly useful in applications where both asynchronous and synchronous processing are required to achieve optimal performance and responsiveness.
+## Detailed Explanation of Half-Sync/Half-Async Pattern with Real-World Examples
 
-The pattern is structured into two components: the synchronous part (Half-Sync) and the asynchronous part (Half-Async).
+Real-world example
 
-Half-Sync (Synchronous Part):
-In this part, there is a synchronous layer that handles high-level control flow and coordination of the application. It typically consists of a set of threads that handle communication, synchronization, and coordination. These threads are responsible for managing shared resources and orchestrating the flow of work in a synchronous manner.
+> Imagine a busy restaurant kitchen where order taking is asynchronous, allowing waiters to keep working while chefs cook each dish synchronously. Similarly, the Half-Sync/Half-Async pattern handles multiple asynchronous tasks and synchronous processing in Java applications efficiently. Meanwhile, the cooking (synchronous part) follows a specific sequence and requires waiting for each dish to be prepared before starting the next. This setup enables the restaurant to handle multiple customer orders efficiently, while ensuring each dish is cooked with the required attention and timing, much like the Half-Sync/Half-Async pattern manages asynchronous tasks and synchronous processing in software systems.
 
-Half-Async (Asynchronous Part):
-The asynchronous part involves a set of asynchronous workers or threads that perform the actual processing and execution of tasks. These threads are responsible for carrying out time-consuming or potentially blocking operations asynchronously. They handle I/O operations, long-running computations, or any task that can be parallelized effectively.
+In plain words
 
-How it Works:
+> The Half-Sync/Half-Async pattern separates operations into asynchronous tasks that handle events without waiting, and synchronous tasks that process these events in an orderly and blocking manner.
 
-Synchronous Part:
+Wikipedia says
 
-The synchronous part handles incoming requests, organizes the tasks to be performed, and dispatches them to the asynchronous workers.
-It's responsible for high-level orchestration, resource management, and synchronization of the overall system.
-Asynchronous Part:
+> The Half-Sync/Half-Async design pattern is used to solve situations where one part of the application runs synchronously while another runs asynchronously, and the two modules need to communicate with each other.
 
-Asynchronous workers execute the tasks independently and concurrently without blocking the main application.
-They handle time-consuming or I/O-bound tasks efficiently, ensuring the system remains responsive.
-Advantages:
+## Programmatic Example of Half-Sync/Half-Async Pattern in Java
 
-Responsiveness: Asynchronous processing ensures that the system remains responsive by allowing non-blocking operations.
-Parallel Execution: It enables concurrent execution of tasks, improving performance by utilizing multiple threads or processes.
-Scalability: The asynchronous part can be scaled easily to handle a larger number of requests efficiently.
-Disadvantages:
+The Half-Sync/Half-Async design pattern is a concurrency pattern that separates synchronous and asynchronous processing in a system, simplifying the programming model without affecting performance. It's particularly useful in scenarios where you have a mix of short, mid, and long duration tasks.
 
-Complexity: Implementing and managing the two parts can be complex, requiring careful coordination and synchronization mechanisms.
-Potential Deadlocks: The interplay between the synchronous and asynchronous parts can introduce potential deadlocks or race conditions if not handled correctly.
-The Half-Sync/Half-Async pattern strikes a balance between responsiveness and efficiency by utilizing both synchronous and asynchronous processing to optimize the performance of a system while ensuring responsiveness to user requests.
+In the provided Java implementation, we can see an example of the Half-Sync/Half-Async pattern in the `App`, `AsynchronousService`, and `ArithmeticSumTask` classes.
 
-## Programmatic Example
+The `App` class is the entry point of the application. It creates an instance of `AsynchronousService` and uses it to handle various tasks asynchronously.
+
 ```java
-{
-import java.util.LinkedList;
-import java.util.Queue;
+public class App {
 
-class TaskQueue {
-    private Queue<String> queue = new LinkedList<>();
-
-    synchronized void enqueue(String task) {
-        queue.add(task);
-        notify(); // Notify waiting threads that a task is available
-    }
-
-    synchronized String dequeue() throws InterruptedException {
-        while (queue.isEmpty()) {
-            wait(); // Wait until a task is enqueued
-        }
-        return queue.poll();
-    }
+  public static void main(String[] args) {
+    var service = new AsynchronousService(new LinkedBlockingQueue<>());
+    service.execute(new ArithmeticSumTask(1000));
+    service.execute(new ArithmeticSumTask(500));
+    service.execute(new ArithmeticSumTask(2000));
+    service.execute(new ArithmeticSumTask(1));
+    service.close();
+  }
 }
+```
 
-class SynchronousPart extends Thread {
-    private TaskQueue taskQueue;
+The `AsynchronousService` class is the asynchronous part of the system. It manages a queue of tasks and processes them in a separate thread.
 
-    public SynchronousPart(TaskQueue taskQueue) {
-        this.taskQueue = taskQueue;
-    }
-
-    @Override
-    public void run() {
-        while (true) {
-            try {
-                String task = taskQueue.dequeue();
-                System.out.println("Synchronous part processing task: " + task);
-                // Simulate some synchronous processing
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
+```java
+public class AsynchronousService {
+  // Implementation details...
 }
+```
 
-class AsynchronousPart extends Thread {
-    @Override
-    public void run() {
-        while (true) {
-            // Simulate some asynchronous processing
-            System.out.println("Asynchronous part processing tasks...");
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
+The `ArithmeticSumTask` class represents a task that can be processed asynchronously. It implements the `AsyncTask` interface, which defines methods for pre-processing, post-processing, and error handling.
+
+```java
+static class ArithmeticSumTask implements AsyncTask<Long> {
+  private final long numberOfElements;
+
+  public ArithmeticSumTask(long numberOfElements) {
+    this.numberOfElements = numberOfElements;
+  }
+
+  @Override
+  public Long call() throws Exception {
+    return ap(numberOfElements);
+  }
+
+  @Override
+  public void onPreCall() {
+    if (numberOfElements < 0) {
+      throw new IllegalArgumentException("n is less than 0");
     }
+  }
+
+  @Override
+  public void onPostCall(Long result) {
+    LOGGER.info(result.toString());
+  }
+
+  @Override
+  public void onError(Throwable throwable) {
+    throw new IllegalStateException("Should not occur");
+  }
 }
+```
 
-public class HalfSyncHalfAsyncExample {
-    public static void main(String[] args) {
-        TaskQueue taskQueue = new TaskQueue();
+This is the `main` function in the `App` class.
 
-        SynchronousPart synchronousThread = new SynchronousPart(taskQueue);
-        AsynchronousPart asynchronousThread = new AsynchronousPart();
+```java
+public static void main(String[] args) {
+    
+    var service = new AsynchronousService(new LinkedBlockingQueue<>());
 
-        synchronousThread.start();
-        asynchronousThread.start();
+    service.execute(new ArithmeticSumTask(1000));
 
-        // Enqueue tasks
-        taskQueue.enqueue("Task 1");
-        taskQueue.enqueue("Task 2");
-        taskQueue.enqueue("Task 3");
+    service.execute(new ArithmeticSumTask(500));
+    service.execute(new ArithmeticSumTask(2000));
+    service.execute(new ArithmeticSumTask(1));
 
-        // Allow the threads to run for a while
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        // Stop the threads (in a real application, you would have a proper way to signal the threads to stop)
-        synchronousThread.interrupt();
-        asynchronousThread.interrupt();
-    }
+    service.close();
 }
- ```
-### In this Java example:
+```
 
-* TaskQueue class manages the task queue and provides methods for enqueueing and dequeuing tasks in a thread-safe manner.
-* SynchronousPart and AsynchronousPart classes represent the synchronous and asynchronous parts of the application, respectively.
-* The synchronous part processes tasks in a synchronous manner, and the asynchronous part processes tasks in an asynchronous manner, simulating some processing time.
-* The main program creates instances of TaskQueue, SynchronousPart, and AsynchronousPart, enqueues tasks, and starts the threads to demonstrate the Half-Sync/Half-Async pattern.
+In this example, the `App` class enqueues tasks to the `AsynchronousService`, which processes them asynchronously. The `ArithmeticSumTask` class defines the task to be processed, including pre-processing, the actual processing, and post-processing steps. 
 
+Running the code produces:
 
-## Real world examples
+```
+10:56:33.922 [pool-1-thread-4] INFO com.iluwatar.halfsynchalfasync.App -- 1
+10:56:34.425 [pool-1-thread-2] INFO com.iluwatar.halfsynchalfasync.App -- 125250
+10:56:34.925 [pool-1-thread-1] INFO com.iluwatar.halfsynchalfasync.App -- 500500
+10:56:35.925 [pool-1-thread-3] INFO com.iluwatar.halfsynchalfasync.App -- 2001000
+```
 
-* [BSD Unix networking subsystem](https://www.dre.vanderbilt.edu/~schmidt/PDF/PLoP-95.pdf)
-* [Real Time CORBA](http://www.omg.org/news/meetings/workshops/presentations/realtime2001/4-3_Pyarali_thread-pool.pdf)
-* [Android AsyncTask framework](https://developer.android.com/reference/android/os/AsyncTask)
+This is a basic example of the Half-Sync/Half-Async pattern, where tasks are enqueued and processed asynchronously, while the main thread continues to handle other tasks.
 
-## Credits
+## When to Use the Half-Sync/Half-Async Pattern in Java
 
-* [Douglas C. Schmidt and Charles D. Cranor - Half Sync/Half Async](https://www.dre.vanderbilt.edu/~schmidt/PDF/PLoP-95.pdf)
-* [Pattern Oriented Software Architecture Volume 2: Patterns for Concurrent and Networked Objects](https://www.amazon.com/gp/product/0471606952/ref=as_li_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=0471606952&linkCode=as2&tag=javadesignpat-20&linkId=889e4af72dca8261129bf14935e0f8dc)
+Use the Half-Sync/Half-Async pattern in scenarios where:
+
+* High performance and efficient concurrency are crucial, such as in Java's standard libraries and network servers managing concurrent connections.
+* The system needs to effectively utilize multicore architectures to balance tasks between asynchronous and synchronous processing.
+* Decoupling of asynchronous tasks from synchronous processing is necessary to simplify the design and implementation.
+
+## Real-World Applications of Half-Sync/Half-Async Pattern in Java
+
+* The Half-Sync/Half-Async pattern is utilized in various frameworks and systems, including BSD Unix networking, Real-Time CORBA, and Android's AsyncTask framework.
+* Java's standard libraries utilize this pattern with thread pools and execution queues in the concurrency utilities (e.g., java.util.concurrent).
+* Network servers handling concurrent connections where IO operations are handled asynchronously and processing of requests is done synchronously.
+
+## Benefits and Trade-offs of Half-Sync/Half-Async Pattern
+
+Benefits:
+
+* This pattern improves system responsiveness and throughput by isolating blocking operations from non-blocking ones, making it a valuable design pattern in Java concurrency.
+* Simplifies programming model by isolating asynchronous and synchronous processing layers.
+
+Trade-offs:
+
+* Adds complexity in managing two different processing modes.
+* Requires careful design to avoid bottlenecks between the synchronous and asynchronous parts.
+
+## Related Java Design Patterns
+
+* [Leader/Followers](https://java-design-patterns.com/patterns/leader-followers/): Both patterns manage thread assignments and concurrency, but Leader/Followers uses a single thread to handle all I/O events, dispatching work to others.
+* [Producer/Consumer](https://java-design-patterns.com/patterns/producer-consumer/): Can be integrated with Half-Sync/Half-Async to manage work queues between the async and sync parts.
+* [Reactor](https://java-design-patterns.com/patterns/reactor/): Often used with Half-Sync/Half-Async to handle multiple service requests delivered to a service handler without blocking the handler.
+
+## References and Credits
+
+* [Java Concurrency in Practice](https://amzn.to/4aRMruW)
+* [Pattern-Oriented Software Architecture Volume 2: Patterns for Concurrent and Networked Objects](https://amzn.to/3UgC24V)
+* [Half-Sync/Half-Async (Douglas C. Schmidt and Charles D. Cranor)](https://www.dre.vanderbilt.edu/~schmidt/PDF/PLoP-95.pdf)

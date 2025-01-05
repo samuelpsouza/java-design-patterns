@@ -1,5 +1,6 @@
 ---
 title: Gateway
+shortTitle: Gateway
 category: Structural
 language: es
 tag:
@@ -137,7 +138,7 @@ Utilizar el patrón Gateway
 
 ## Usos conocidos
 
-* [API Gateway](https://java-design-patterns.com/patterns/api-gateway/)
+* [API Gateway](https://java-design-patterns.com/patterns/microservices-api-gateway/)
 * [10 most common use cases of an API Gateway](https://apisix.apache.org/blog/2022/10/27/ten-use-cases-api-gateway/)
 
 ## Créditos

@@ -27,9 +27,8 @@ package com.iluwatar.visitor;
 import java.util.Optional;
 
 /**
- * Date: 12/30/15 - 18:36 PM.
+ * SergeantVisitorTest
  *
- * @author Jeroen Meulemeester
  */
 class SergeantVisitorTest extends VisitorTest<SergeantVisitor> {
 
@@ -39,9 +38,9 @@ class SergeantVisitorTest extends VisitorTest<SergeantVisitor> {
   public SergeantVisitorTest() {
     super(
         new SergeantVisitor(),
-        Optional.empty(),
-        Optional.of("Hello sergeant"),
-        Optional.empty()
+        null,
+        ("Hello sergeant"),
+        null
     );
   }
 
